@@ -1,0 +1,69 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Pilchard123.ODSAPI.Synchronise;
+
+namespace Pilchard123.ODSAPI
+{
+    public class ODSClient
+    {
+        private const string BaseAddress = "https://directory.spineservices.nhs.uk/ORD/2-0-0";
+
+        private readonly HttpClient _httpClient;
+
+        /// <summary>
+        /// Initialises a new instance of the <see cref="ODSClient"/> class using the supplied <see cref="HttpClient"/> for making requests.
+        /// </summary>
+        /// <param name="httpClient">The <see cref="HttpClient" /> to be used for making requests to the <see href="https://digital.nhs.uk/services/organisation-data-service/apis-for-the-organisation-data-service">NHS ODS API</see>.
+        /// Disposing of the <see cref="HttpClient"/> is the responsibility of the user.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="httpClient"/> is null.</exception>
+        public ODSClient(HttpClient httpClient)
+        {
+            if (httpClient is null)
+            {
+                throw new ArgumentNullException(nameof(httpClient));
+            }
+            _httpClient = httpClient;
+        }
+
+        /// <summary>
+        /// Returns the codes of organisations updated on or after <paramref name="lastChangeDate"/>, in no particular order.
+        /// Uses the <see href="https://digital.nhs.uk/services/organisation-data-service/guidance-for-developers/sync-endpoint">sync endpoint</see> to fetch the codes.
+        /// </summary>
+        /// <param name="lastChangeDate">The date from which to search. May not be more than 185 days in the past.</param>
+        /// <returns>The codes of organisations updated on or after <paramref name="lastChangeDate"/>, in no particular order.</returns>
+        /// <exception cref="APIException">Thrown when the API returns a non-success status code</exception>
+        public async Task<IEnumerable<string>> GetUpdatedOrganisationsAsync(
+            DateTime lastChangeDate
+        )
+        {
+            var requestUri = $"{BaseAddress}/sync?LastChangeDate={lastChangeDate:yyyy-MM-dd}";
+            var result = await _httpClient.GetAsync(
+                requestUri: requestUri
+            );
+
+            await CheckErrors(result);
+
+            using (var resStream = await result.Content.ReadAsStreamAsync())
+            {
+                var typedResult = await JsonSerializer.DeserializeAsync<SyncroniseResult>(resStream);
+                return typedResult.Organisations.Select(o => o.OrgLink.Split('/').Last());
+            }
+        }
+
+        private async static Task CheckErrors(HttpResponseMessage result)
+        {
+            if (!result.IsSuccessStatusCode)
+            {
+                using (var resStream = await result.Content.ReadAsStreamAsync())
+                {
+                    var errorResult = await JsonSerializer.DeserializeAsync<ErrorResult>(resStream, options: new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    throw new APIException(result.StatusCode, errorResult);
+                }
+            }
+        }
+    }
+}
