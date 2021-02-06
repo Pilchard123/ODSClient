@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Pilchard123.ODSAPI.Synchronise;
+using Pilchard123.ODSAPI.APIResponses;
 
 namespace Pilchard123.ODSAPI
 {
@@ -36,7 +36,7 @@ namespace Pilchard123.ODSAPI
         /// <param name="lastChangeDate">The date from which to search. May not be more than 185 days in the past.</param>
         /// <returns>The codes of organisations updated on or after <paramref name="lastChangeDate"/>, in no particular order.</returns>
         /// <exception cref="APIException">Thrown when the API returns a non-success status code</exception>
-        public async Task<IEnumerable<string>> GetUpdatedOrganisationsAsync(
+        public async Task<IEnumerable<string>> GetUpdatedOrganisationCodesAsync(
             DateTime lastChangeDate
         )
         {
@@ -49,7 +49,7 @@ namespace Pilchard123.ODSAPI
 
             using (var resStream = await result.Content.ReadAsStreamAsync())
             {
-                var typedResult = await JsonSerializer.DeserializeAsync<SyncroniseResult>(resStream);
+                var typedResult = await JsonSerializer.DeserializeAsync<SyncroniseResponse>(resStream);
                 return typedResult.Organisations.Select(o => o.OrgLink.Split('/').Last());
             }
         }
@@ -60,7 +60,7 @@ namespace Pilchard123.ODSAPI
             {
                 using (var resStream = await result.Content.ReadAsStreamAsync())
                 {
-                    var errorResult = await JsonSerializer.DeserializeAsync<ErrorResult>(resStream, options: new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    var errorResult = await JsonSerializer.DeserializeAsync<ErrorResponse>(resStream, options: new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                     throw new APIException(result.StatusCode, errorResult);
                 }
             }

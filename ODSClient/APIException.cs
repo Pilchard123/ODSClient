@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using Pilchard123.ODSAPI.APIResponses;
 
 namespace Pilchard123.ODSAPI
 {
@@ -16,14 +17,14 @@ namespace Pilchard123.ODSAPI
         /// <summary>
         /// The body of the response from the API
         /// </summary>
-        public ErrorResult Error { get; private set; }
+        public ErrorResponse Error { get; private set; }
 
         /// <summary>
-        /// /// Initialises a new instance of the <see cref="APIException"/> class with the specified <see cref="HttpStatusCode"/> and <see cref="ErrorResult"/>.
+        /// /// Initialises a new instance of the <see cref="APIException"/> class with the specified <see cref="HttpStatusCode"/> and <see cref="ErrorResponse"/>.
         /// </summary>
         /// <param name="statusCode">The HTTP status code from the API</param>
         /// <param name="error">The body of the response from the API</param>
-        internal APIException(HttpStatusCode statusCode, ErrorResult error)
+        internal APIException(HttpStatusCode statusCode, ErrorResponse error)
         {
             StatusCode = statusCode;
             Error = error;

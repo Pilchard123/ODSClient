@@ -1,9 +1,9 @@
-﻿namespace Pilchard123.ODSAPI
+﻿namespace Pilchard123.ODSAPI.APIResponses
 {
     /// <summary>
     /// Represents an error response from the API.
     /// </summary>
-    public class ErrorResult
+    class ErrorResponse
     {
         /// <summary>
         /// The error code reurned from the API. Usually the same as the HTTP status code, but the API documentation does not actually specify that to be the case.
