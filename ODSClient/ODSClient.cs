@@ -49,7 +49,7 @@ namespace Pilchard123.ODSAPI
 
             using (var resStream = await result.Content.ReadAsStreamAsync())
             {
-                var typedResult = await JsonSerializer.DeserializeAsync<SyncroniseResponse>(resStream);
+                var typedResult = await JsonSerializer.DeserializeAsync<SynchroniseResponse>(resStream);
                 return typedResult.Organisations.Select(o => o.OrgLink.Split('/').Last());
             }
         }

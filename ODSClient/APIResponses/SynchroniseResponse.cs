@@ -1,7 +1,7 @@
 ﻿namespace Pilchard123.ODSAPI.APIResponses
 {
 
-    class SyncroniseResponse
+    class SynchroniseResponse
     {
         public SyncroniseOrganisation[] Organisations { get; set; }
     }
