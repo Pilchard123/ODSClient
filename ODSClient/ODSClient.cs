@@ -38,31 +38,30 @@ namespace Pilchard123.ODSAPI
         /// Uses the <see href="https://digital.nhs.uk/services/organisation-data-service/guidance-for-developers/sync-endpoint">sync endpoint</see> to fetch the codes.
         /// </summary>
         /// <param name="lastChangeDate">The date from which to search. May not be more than 185 days in the past.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>The codes of organisations updated on or after <paramref name="lastChangeDate"/>, in no particular order.</returns>
         /// <exception cref="APIException">Thrown when the API returns a non-success status code</exception>
-        public async Task<IEnumerable<string>> GetUpdatedOrganisationCodesAsync(
-            DateTime lastChangeDate
-        )
+        public async Task<IEnumerable<string>> GetUpdatedOrganisationCodesAsync(DateTime lastChangeDate, CancellationToken cancellationToken = default)
         {
             var requestUri = $"{BaseAddress}/sync?LastChangeDate={lastChangeDate:yyyy-MM-dd}";
             var result = await _httpClient.GetAsync(
-                requestUri: requestUri
+                requestUri: requestUri,
+                cancellationToken: cancellationToken
             );
 
-            await CheckErrors(result);
+            await CheckErrors(result, cancellationToken);
 
             using (var resStream = await result.Content.ReadAsStreamAsync())
             {
-                var typedResult = await JsonSerializer.DeserializeAsync<SynchroniseResponse>(resStream);
+                var typedResult = await JsonSerializer.DeserializeAsync<SynchroniseResponse>(resStream, cancellationToken: cancellationToken);
                 return typedResult.Organisations.Select(o => o.OrgLink.Split('/').Last());
             }
         }
 
         public async Task<IEnumerable<OrganisationSummary>> Search(string name = null, string postcode = null, DateTime? lastChangeDate = null, OrganisationStatus? status = null,
                                                string primaryRoleId = null, string nonPrimaryRoleId = null, IEnumerable<string> roles = null, string recordClass = null,
-                                               int? timeout = null, CancellationToken cancellationToken = default)
+                                               CancellationToken cancellationToken = default)
         {
-
             var paramDict = new Dictionary<string, string>();
 
             if (name is object)
@@ -110,12 +109,14 @@ namespace Pilchard123.ODSAPI
                 throw new ArgumentException("At least one search parameter must be given");
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             var result = await _httpClient.GetAsync(
                 requestUri: CreateSearchUri(paramDict),
                 cancellationToken: cancellationToken
             );
 
-            await CheckErrors(result);
+            await CheckErrors(result, cancellationToken);
 
             var finalResults = new List<OrganisationSummary>();
 
@@ -130,6 +131,8 @@ namespace Pilchard123.ODSAPI
             {
                 for (var o = PageSize; o <= totalResults; o += PageSize)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     finalResults.AddRange(await MakeSearchRequest(
                         paramDict: paramDict,
                         offset: o,
@@ -163,13 +166,16 @@ namespace Pilchard123.ODSAPI
                 string.Join("&", paramDict.Select(kvp => $"{kvp.Key}={HttpUtility.UrlEncode(kvp.Value)}"));
         }
 
-        private async static Task CheckErrors(HttpResponseMessage result)
+        private async static Task CheckErrors(HttpResponseMessage result, CancellationToken cancellationToken)
         {
             if (!result.IsSuccessStatusCode)
             {
                 using (var resStream = await result.Content.ReadAsStreamAsync())
                 {
-                    var errorResult = await JsonSerializer.DeserializeAsync<ErrorResponse>(resStream, options: new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    var errorResult = await JsonSerializer.DeserializeAsync<ErrorResponse>(
+                        resStream,
+                        options: new JsonSerializerOptions { PropertyNameCaseInsensitive = true },
+                        cancellationToken: cancellationToken);
                     throw new APIException(result.StatusCode, errorResult);
                 }
             }
