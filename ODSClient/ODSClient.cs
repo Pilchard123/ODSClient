@@ -58,7 +58,7 @@ namespace Pilchard123.ODSAPI
             }
         }
 
-        public async Task<IEnumerable<OrganisationSummary>> Search(string name = null, string postcode = null, DateTime? lastChangeDate = null, OrganisationStatus? status = null,
+        public async Task<IEnumerable<OrganisationSummary>> SearchAsync(string name = null, string postcode = null, DateTime? lastChangeDate = null, OrganisationStatus? status = null,
                                                string primaryRoleId = null, string nonPrimaryRoleId = null, IEnumerable<string> roles = null, string recordClass = null,
                                                CancellationToken cancellationToken = default)
         {
