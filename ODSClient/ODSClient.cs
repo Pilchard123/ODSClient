@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using Pilchard123.ODSAPI.APIResponses;
+using Pilchard123.ODSAPI.APIResults;
 
 namespace Pilchard123.ODSAPI
 {
     public class ODSClient
     {
         private const string BaseAddress = "https://directory.spineservices.nhs.uk/ORD/2-0-0";
+        private const int PageSize = 1000;
 
         private readonly HttpClient _httpClient;
 
@@ -52,6 +56,111 @@ namespace Pilchard123.ODSAPI
                 var typedResult = await JsonSerializer.DeserializeAsync<SynchroniseResponse>(resStream);
                 return typedResult.Organisations.Select(o => o.OrgLink.Split('/').Last());
             }
+        }
+
+        public async Task<IEnumerable<OrganisationSummary>> Search(string name = null, string postcode = null, DateTime? lastChangeDate = null, OrganisationStatus? status = null,
+                                               string primaryRoleId = null, string nonPrimaryRoleId = null, IEnumerable<string> roles = null, string recordClass = null,
+                                               int? timeout = null, CancellationToken cancellationToken = default)
+        {
+
+            var paramDict = new Dictionary<string, string>();
+
+            if (name is object)
+            {
+                paramDict["Name"] = name;
+            }
+
+            if (postcode is object)
+            {
+                paramDict["PostCode"] = postcode;
+            }
+
+            if (lastChangeDate is object)
+            {
+                paramDict["LastChangeDate"] = lastChangeDate?.ToString("yyyy-MM-dd");
+            }
+
+            if (status is object)
+            {
+                paramDict["Status"] = status?.ToString();
+            }
+
+            if (primaryRoleId is object)
+            {
+                paramDict["PrimaryRoleId"] = primaryRoleId;
+            }
+
+            if (nonPrimaryRoleId is object)
+            {
+                paramDict["MonPrimaryRoleId"] = primaryRoleId;
+            }
+
+            if (roles is object)
+            {
+                paramDict["Roles"] = string.Join(",", roles.Where(r => r is object));
+            }
+
+            if (recordClass is object)
+            {
+                paramDict["OrgRecordClass"] = recordClass;
+            }
+
+            if (!paramDict.Any())
+            {
+                throw new ArgumentException("At least one search parameter must be given");
+            }
+
+            var result = await _httpClient.GetAsync(
+                requestUri: CreateSearchUri(paramDict),
+                cancellationToken: cancellationToken
+            );
+
+            await CheckErrors(result);
+
+            var finalResults = new List<OrganisationSummary>();
+
+            var totalResults = int.Parse(result.Headers.Single(h => h.Key.ToLowerInvariant() == "x-total-count").Value.Single());
+            using (var resStream = await result.Content.ReadAsStreamAsync())
+            {
+                var typedResult = await JsonSerializer.DeserializeAsync<SearchResponse>(resStream, cancellationToken: cancellationToken);
+                finalResults.AddRange(typedResult.Organisations);
+            }
+
+            if (totalResults > PageSize)
+            {
+                for (var o = PageSize; o <= totalResults; o += PageSize)
+                {
+                    finalResults.AddRange(await MakeSearchRequest(
+                        paramDict: paramDict,
+                        offset: o,
+                        cancellationToken: cancellationToken
+                        ));
+                }
+            }
+
+            return finalResults;
+        }
+
+        private async Task<IEnumerable<OrganisationSummary>> MakeSearchRequest(IDictionary<string, string> paramDict, int offset, CancellationToken cancellationToken = default)
+        {
+            var result = await _httpClient.GetAsync(
+                requestUri: CreateSearchUri(paramDict, offset),
+                cancellationToken: cancellationToken
+            );
+
+            using (var resStream = await result.Content.ReadAsStreamAsync())
+            {
+                var typedResult = await JsonSerializer.DeserializeAsync<SearchResponse>(resStream, cancellationToken: cancellationToken);
+                return typedResult.Organisations;
+            }
+        }
+
+        private string CreateSearchUri(IDictionary<string, string> paramDict, int offset = 0)
+        {
+            var baseUri = $"{BaseAddress}/organisations?Limit={PageSize}&";
+            return baseUri +
+                (offset > 0 ? $"Offset={offset}&" : "") +
+                string.Join("&", paramDict.Select(kvp => $"{kvp.Key}={HttpUtility.UrlEncode(kvp.Value)}"));
         }
 
         private async static Task CheckErrors(HttpResponseMessage result)
