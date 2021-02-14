@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using Pilchard123.ODSAPI.APIResponses;
+using Pilchard123.ODSAPI.Models;
 using Pilchard123.ODSAPI.Models.Search;
 
 namespace Pilchard123.ODSAPI
@@ -109,11 +110,8 @@ namespace Pilchard123.ODSAPI
             {
                 using (var resStream = await result.Content.ReadAsStreamAsync())
                 {
-                    var errorResult = await JsonSerializer.DeserializeAsync<ErrorResponse>(
-                        resStream,
-                        options: new JsonSerializerOptions { PropertyNameCaseInsensitive = true },
-                        cancellationToken: cancellationToken);
-                    throw new APIException(result.StatusCode, errorResult);
+                    var errorResult = await JsonSerializer.DeserializeAsync<ErrorResponse>(resStream, cancellationToken: cancellationToken);
+                    throw new APIException(result.StatusCode, new APIError(errorResult.errorCode, errorResult.errorText));
                 }
             }
         }

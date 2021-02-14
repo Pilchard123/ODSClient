@@ -1,18 +1,11 @@
 ﻿namespace Pilchard123.ODSAPI.APIResponses
 {
-    /// <summary>
-    /// Represents an error response from the API.
-    /// </summary>
-    class ErrorResponse
+    public class ErrorResponse
     {
-        /// <summary>
-        /// The error code reurned from the API. Usually the same as the HTTP status code, but the API documentation does not actually specify that to be the case.
-        /// </summary>
-        public int ErrorCode { get; set; }
-        /// <summary>
-        /// A short description of the problem with the request. More specific than a standard HTTP status code.
-        /// </summary>
-        public string ErrorText { get; set; }
+#pragma warning disable IDE1006 // Naming Styles
+        public int errorCode { get; set; }
+        public string errorText { get; set; }
+#pragma warning restore IDE1006 // Naming Styles
     }
 
 }
