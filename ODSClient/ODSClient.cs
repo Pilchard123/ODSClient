@@ -58,98 +58,35 @@ namespace Pilchard123.ODSAPI
             }
         }
 
-        public async Task<IEnumerable<OrganisationSummary>> SearchAsync(string name = null, string postcode = null, DateTime? lastChangeDate = null, OrganisationStatus? status = null,
-                                               string primaryRoleId = null, string nonPrimaryRoleId = null, IEnumerable<string> roles = null, string recordClass = null,
-                                               CancellationToken cancellationToken = default)
+        public async Task<SearchResult> SearchAsync(Criteria criteria, CancellationToken cancellationToken = default)
         {
-            var paramDict = new Dictionary<string, string>();
-
-            if (name is object)
-            {
-                paramDict["Name"] = name;
-            }
-
-            if (postcode is object)
-            {
-                paramDict["PostCode"] = postcode;
-            }
-
-            if (lastChangeDate is object)
-            {
-                paramDict["LastChangeDate"] = lastChangeDate?.ToString("yyyy-MM-dd");
-            }
-
-            if (status is object)
-            {
-                paramDict["Status"] = status?.ToString();
-            }
-
-            if (primaryRoleId is object)
-            {
-                paramDict["PrimaryRoleId"] = primaryRoleId;
-            }
-
-            if (nonPrimaryRoleId is object)
-            {
-                paramDict["MonPrimaryRoleId"] = primaryRoleId;
-            }
-
-            if (roles is object)
-            {
-                paramDict["Roles"] = string.Join(",", roles.Where(r => r is object));
-            }
-
-            if (recordClass is object)
-            {
-                paramDict["OrgRecordClass"] = recordClass;
-            }
-
-            if (!paramDict.Any())
-            {
-                throw new ArgumentException("At least one search parameter must be given");
-            }
 
             cancellationToken.ThrowIfCancellationRequested();
 
             var result = await _httpClient.GetAsync(
-                requestUri: CreateSearchUri(paramDict),
+                requestUri: CreateSearchUri(criteria.RequestParameters),
                 cancellationToken: cancellationToken
             );
 
             await CheckErrors(result, cancellationToken);
 
-            var finalResults = new List<OrganisationSummary>();
 
             var totalResults = int.Parse(result.Headers.Single(h => h.Key.ToLowerInvariant() == "x-total-count").Value.Single());
             using (var resStream = await result.Content.ReadAsStreamAsync())
             {
                 var typedResult = await JsonSerializer.DeserializeAsync<SearchResponse>(resStream, cancellationToken: cancellationToken);
-                finalResults.AddRange(typedResult.Organisations);
+                return new SearchResult(criteria, PageSize, totalResults, typedResult.Organisations, this, cancellationToken);
             }
-
-            if (totalResults > PageSize)
-            {
-                for (var o = PageSize; o <= totalResults; o += PageSize)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    finalResults.AddRange(await MakeSearchRequest(
-                        paramDict: paramDict,
-                        offset: o,
-                        cancellationToken: cancellationToken
-                        ));
-                }
-            }
-
-            return finalResults;
         }
 
-        private async Task<IEnumerable<OrganisationSummary>> MakeSearchRequest(IDictionary<string, string> paramDict, int offset, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<OrganisationSummary>> GetSearchPageAsync(Criteria criteria, int offset = 0, CancellationToken cancellationToken = default)
         {
             var result = await _httpClient.GetAsync(
-                requestUri: CreateSearchUri(paramDict, offset),
+                requestUri: CreateSearchUri(criteria.RequestParameters, offset),
                 cancellationToken: cancellationToken
             );
+
+            await CheckErrors(result, cancellationToken);
 
             using (var resStream = await result.Content.ReadAsStreamAsync())
             {
