@@ -13,7 +13,7 @@ namespace Pilchard123.ODSAPI.Models.Search
         public int TotalRecords { get; }
         public int TotalPages { get; }
         public int FetchedPages { get; private set; }
-        public Criteria Criteria { get; }
+        public SearchCriteria Criteria { get; }
         public bool IsComplete => FetchedPages == TotalPages;
 
         private readonly List<OrganisationSummary> _results;
@@ -21,7 +21,7 @@ namespace Pilchard123.ODSAPI.Models.Search
         private readonly ODSClient _client;
         private readonly CancellationToken _cancellationToken;
 
-        internal SearchResult(Criteria criteria, int pageSize, int totalRecords, IEnumerable<OrganisationSummary> firstPage, ODSClient client,
+        internal SearchResult(SearchCriteria criteria, int pageSize, int totalRecords, IEnumerable<OrganisationSummary> firstPage, ODSClient client,
                               CancellationToken cancellationToken = default)
         {
             Criteria = criteria;

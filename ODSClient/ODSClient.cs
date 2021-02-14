@@ -58,7 +58,7 @@ namespace Pilchard123.ODSAPI
             }
         }
 
-        public async Task<SearchResult> SearchAsync(Criteria criteria, CancellationToken cancellationToken = default)
+        public async Task<SearchResult> SearchAsync(SearchCriteria criteria, CancellationToken cancellationToken = default)
         {
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -79,7 +79,7 @@ namespace Pilchard123.ODSAPI
             }
         }
 
-        public async Task<IEnumerable<OrganisationSummary>> GetSearchPageAsync(Criteria criteria, int offset = 0, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<OrganisationSummary>> GetSearchPageAsync(SearchCriteria criteria, int offset = 0, CancellationToken cancellationToken = default)
         {
             var result = await _httpClient.GetAsync(
                 requestUri: CreateSearchUri(criteria.RequestParameters, offset),

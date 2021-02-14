@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Pilchard123.ODSAPI.Models.Search
 {
-    public class Criteria
+    public class SearchCriteria
     {
         public string Name { get; }
         public string Postcode { get; }
@@ -18,7 +18,7 @@ namespace Pilchard123.ODSAPI.Models.Search
 
         public ReadOnlyDictionary<string, string> RequestParameters { get; }
 
-        public Criteria(string name = null, string postcode = null, DateTime? lastChangeDate = null, OrganisationStatus? organisationStatus = null,
+        public SearchCriteria(string name = null, string postcode = null, DateTime? lastChangeDate = null, OrganisationStatus? organisationStatus = null,
                         string primaryRoleId = null, string nonPrimaryRoleId = null, IEnumerable<string> roles = null, string recordClass = null)
         {
 
