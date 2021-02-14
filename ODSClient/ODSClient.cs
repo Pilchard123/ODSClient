@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using Pilchard123.ODSAPI.APIResponses;
-using Pilchard123.ODSAPI.APIResults;
+using Pilchard123.ODSAPI.Models.Search;
 
 namespace Pilchard123.ODSAPI
 {
