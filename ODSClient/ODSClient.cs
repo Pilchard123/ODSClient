@@ -34,6 +34,7 @@ namespace Pilchard123.ODSAPI
             _httpClient = httpClient;
         }
 
+        #region Sync
         /// <summary>
         /// Returns the codes of organisations updated on or after <paramref name="lastChangeDate"/>, in no particular order.
         /// Uses the <see href="https://digital.nhs.uk/services/organisation-data-service/guidance-for-developers/sync-endpoint">sync endpoint</see> to fetch the codes.
@@ -58,7 +59,9 @@ namespace Pilchard123.ODSAPI
                 return typedResult.Organisations.Select(o => o.OrgLink.Split('/').Last());
             }
         }
+        #endregion
 
+        #region Search
         public async Task<SearchResult> SearchAsync(SearchCriteria criteria, CancellationToken cancellationToken = default)
         {
 
@@ -103,6 +106,7 @@ namespace Pilchard123.ODSAPI
                 (offset > 0 ? $"Offset={offset}&" : "") +
                 string.Join("&", paramDict.Select(kvp => $"{kvp.Key}={HttpUtility.UrlEncode(kvp.Value)}"));
         }
+        #endregion
 
         private async static Task CheckResponseErrors(HttpResponseMessage result, CancellationToken cancellationToken)
         {
