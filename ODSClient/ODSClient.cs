@@ -50,7 +50,7 @@ namespace Pilchard123.ODSAPI
                 cancellationToken: cancellationToken
             );
 
-            await CheckErrors(result, cancellationToken);
+            await CheckResponseErrors(result, cancellationToken);
 
             using (var resStream = await result.Content.ReadAsStreamAsync())
             {
@@ -69,7 +69,7 @@ namespace Pilchard123.ODSAPI
                 cancellationToken: cancellationToken
             );
 
-            await CheckErrors(result, cancellationToken);
+            await CheckResponseErrors(result, cancellationToken);
 
 
             var totalResults = int.Parse(result.Headers.Single(h => h.Key.ToLowerInvariant() == "x-total-count").Value.Single());
@@ -87,7 +87,7 @@ namespace Pilchard123.ODSAPI
                 cancellationToken: cancellationToken
             );
 
-            await CheckErrors(result, cancellationToken);
+            await CheckResponseErrors(result, cancellationToken);
 
             using (var resStream = await result.Content.ReadAsStreamAsync())
             {
@@ -104,7 +104,7 @@ namespace Pilchard123.ODSAPI
                 string.Join("&", paramDict.Select(kvp => $"{kvp.Key}={HttpUtility.UrlEncode(kvp.Value)}"));
         }
 
-        private async static Task CheckErrors(HttpResponseMessage result, CancellationToken cancellationToken)
+        private async static Task CheckResponseErrors(HttpResponseMessage result, CancellationToken cancellationToken)
         {
             if (!result.IsSuccessStatusCode)
             {
