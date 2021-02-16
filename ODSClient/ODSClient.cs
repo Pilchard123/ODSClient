@@ -34,6 +34,61 @@ namespace Pilchard123.ODSAPI
             _httpClient = httpClient;
         }
 
+        #region CodeSystems
+        public async Task<IDictionary<string, Models.CodeSystems.Role>> GetRolesFromAPIAsync(CancellationToken cancellationToken = default)
+        {
+            var requestUri = $"{BaseAddress}/roles";
+            var result = await _httpClient.GetAsync(
+                requestUri: requestUri,
+                cancellationToken: cancellationToken
+            );
+
+            await CheckResponseErrors(result, cancellationToken);
+
+            using (var resStream = await result.Content.ReadAsStreamAsync())
+            {
+                var typedResult = await JsonSerializer.DeserializeAsync<RoleResponse>(resStream, cancellationToken: cancellationToken);
+                return typedResult.Roles.ToDictionary(r => r.id,
+                    r => new Models.CodeSystems.Role(r.id, int.Parse(r.code), r.displayName, bool.Parse(r.primaryRole)));
+            }
+        }
+
+        public async Task<IDictionary<string, Models.CodeSystems.Relationship>> GetRelationshipsFromAPIAsync(CancellationToken cancellationToken = default)
+        {
+            var requestUri = $"{BaseAddress}/rels";
+            var result = await _httpClient.GetAsync(
+                requestUri: requestUri,
+                cancellationToken: cancellationToken
+            );
+
+            await CheckResponseErrors(result, cancellationToken);
+
+            using (var resStream = await result.Content.ReadAsStreamAsync())
+            {
+                var typedResult = await JsonSerializer.DeserializeAsync<RelationshipResponse>(resStream, cancellationToken: cancellationToken);
+                return typedResult.Relationships.ToDictionary(r => r.id,
+                    r => new Models.CodeSystems.Relationship(r.id, int.Parse(r.code), r.displayName));
+            }
+        }
+        public async Task<IDictionary<string, Models.CodeSystems.RecordClass>> GetRecordClassesFromAPIAsync(CancellationToken cancellationToken = default)
+        {
+            var requestUri = $"{BaseAddress}/recordclasses";
+            var result = await _httpClient.GetAsync(
+                requestUri: requestUri,
+                cancellationToken: cancellationToken
+            );
+
+            await CheckResponseErrors(result, cancellationToken);
+
+            using (var resStream = await result.Content.ReadAsStreamAsync())
+            {
+                var typedResult = await JsonSerializer.DeserializeAsync<RecordClassResponse>(resStream, cancellationToken: cancellationToken);
+                return typedResult.RecordClasses.ToDictionary(r => r.id,
+                    r => new Models.CodeSystems.RecordClass(r.id, int.Parse(r.code), r.displayName));
+            }
+        }
+        #endregion
+
         #region Sync
         /// <summary>
         /// Returns the codes of organisations updated on or after <paramref name="lastChangeDate"/>, in no particular order.
