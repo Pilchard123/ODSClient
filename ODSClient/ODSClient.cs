@@ -47,7 +47,7 @@ namespace Pilchard123.ODSAPI
 
             using (var resStream = await result.Content.ReadAsStreamAsync())
             {
-                var typedResult = await JsonSerializer.DeserializeAsync<RoleResponse>(resStream, cancellationToken: cancellationToken);
+                var typedResult = await JsonSerializer.DeserializeAsync<RolesResponse>(resStream, cancellationToken: cancellationToken);
                 return typedResult.Roles.ToDictionary(r => r.id,
                     r => new Models.CodeSystems.Role(r.id, int.Parse(r.code), r.displayName, bool.Parse(r.primaryRole)));
             }
@@ -65,7 +65,7 @@ namespace Pilchard123.ODSAPI
 
             using (var resStream = await result.Content.ReadAsStreamAsync())
             {
-                var typedResult = await JsonSerializer.DeserializeAsync<RelationshipResponse>(resStream, cancellationToken: cancellationToken);
+                var typedResult = await JsonSerializer.DeserializeAsync<RelationshipsResponse>(resStream, cancellationToken: cancellationToken);
                 return typedResult.Relationships.ToDictionary(r => r.id,
                     r => new Models.CodeSystems.Relationship(r.id, int.Parse(r.code), r.displayName));
             }
@@ -82,7 +82,7 @@ namespace Pilchard123.ODSAPI
 
             using (var resStream = await result.Content.ReadAsStreamAsync())
             {
-                var typedResult = await JsonSerializer.DeserializeAsync<RecordClassResponse>(resStream, cancellationToken: cancellationToken);
+                var typedResult = await JsonSerializer.DeserializeAsync<RecordClassesResponse>(resStream, cancellationToken: cancellationToken);
                 return typedResult.RecordClasses.ToDictionary(r => r.id,
                     r => new Models.CodeSystems.RecordClass(r.id, int.Parse(r.code), r.displayName));
             }

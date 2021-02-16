@@ -1,12 +1,12 @@
 ﻿namespace Pilchard123.ODSAPI.APIResponses
 {
 
-    public class RelationshipResponse
+    class RecordClassesResponse
     {
-        public Relationship[] Relationships { get; set; }
+        public RecordClass[] RecordClasses { get; set; }
     }
 
-    public class Relationship
+    class RecordClass
     {
 #pragma warning disable IDE1006 // Naming Styles
         public string id { get; set; }

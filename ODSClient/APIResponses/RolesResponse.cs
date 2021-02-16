@@ -1,7 +1,7 @@
 ﻿namespace Pilchard123.ODSAPI.APIResponses
 {
 
-    public class RoleResponse
+    public class RolesResponse
     {
         public Role[] Roles { get; set; }
     }
